@@ -1,0 +1,573 @@
+---
+// Farben (Colors) - Stroop Effect Training Tool
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Farben - Training Tools">
+  <div id="colors-app" class="animate-enter">
+    <!-- Config State (default view) -->
+    <div id="config-view">
+      <!-- Tool Header -->
+      <div class="tool-header">
+        <div class="tool-icon purple">
+          <svg class="icon icon-xl" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-bold gradient-text gradient-purple-pink">Farben</h1>
+          <p class="text-secondary">Stroop-Effekt und Reaktions-Training.</p>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Mode Card -->
+        <div class="card">
+          <h2 class="text-xl font-bold mb-6">Modus</h2>
+          <div class="space-y-4">
+            <!-- Sound Control Mode Toggle -->
+            <button type="button" class="toggle" id="sound-mode-toggle">
+              <div class="toggle-content">
+                <div class="toggle-label">Sound Control Modus</div>
+                <div class="toggle-description">Farbe wechselt bei Geräusch</div>
+              </div>
+              <div class="toggle-switch off" id="sound-mode-switch">
+                <div class="toggle-knob"></div>
+              </div>
+            </button>
+
+            <!-- Interval Settings (shown when sound mode is OFF) -->
+            <div id="interval-settings">
+              <div class="slider-container">
+                <div class="slider-header">
+                  <span class="slider-label">Intervall (Geschwindigkeit)</span>
+                  <span class="slider-value" id="interval-value">2.0s</span>
+                </div>
+                <input type="range" class="slider-input" id="interval-slider" min="500" max="5000" step="100" value="2000">
+              </div>
+
+              <div class="space-y-4 mt-4" style="padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                <!-- Infinite Toggle -->
+                <button type="button" class="toggle" id="infinite-toggle">
+                  <div class="toggle-content">
+                    <div class="toggle-label">Unendlich</div>
+                  </div>
+                  <div class="toggle-switch off" id="infinite-switch">
+                    <div class="toggle-knob"></div>
+                  </div>
+                </button>
+
+                <!-- Steps Slider (hidden when infinite) -->
+                <div id="steps-settings">
+                  <div class="slider-container">
+                    <div class="slider-header">
+                      <span class="slider-label">Anzahl Schritte</span>
+                      <span class="slider-value" id="steps-value">20</span>
+                    </div>
+                    <input type="range" class="slider-input" id="steps-slider" min="5" max="100" step="5" value="20">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Duration Settings (shown when sound mode is ON) -->
+            <div id="duration-settings" class="hidden">
+              <div class="slider-container">
+                <div class="slider-header">
+                  <span class="slider-label">Dauer</span>
+                  <span class="slider-value" id="duration-value">60s</span>
+                </div>
+                <input type="range" class="slider-input" id="duration-slider" min="10" max="300" step="10" value="60">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Options Card -->
+        <div class="card">
+          <h2 class="text-xl font-bold mb-6">Optionen</h2>
+          <div class="space-y-4">
+            <!-- Audio Feedback Toggle -->
+            <button type="button" class="toggle" id="audio-toggle">
+              <div class="toggle-content">
+                <div class="toggle-label">Audio Feedback</div>
+              </div>
+              <div class="toggle-switch on" id="audio-switch">
+                <div class="toggle-knob"></div>
+              </div>
+            </button>
+
+            <!-- Sound Counter Overlay Toggle -->
+            <button type="button" class="toggle" id="counter-toggle">
+              <div class="toggle-content">
+                <div class="toggle-label">Sound Zähler Overlay</div>
+                <div class="toggle-description">Zeigt Zähler auf dem Bildschirm</div>
+              </div>
+              <div class="toggle-switch off" id="counter-switch">
+                <div class="toggle-knob"></div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Microphone Settings Card (shown when sound mode or counter is ON) -->
+        <div class="card hidden" id="mic-settings-card" style="border-color: rgba(59, 130, 246, 0.2);">
+          <div class="flex items-center gap-2 mb-4" style="color: var(--color-blue-400);">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="22"/>
+            </svg>
+            <span class="font-bold">Mikrofon Einstellungen</span>
+          </div>
+          <div class="space-y-6">
+            <!-- Audio Level Bar -->
+            <div class="audio-bar">
+              <div class="audio-bar-fill" id="audio-level-fill" style="width: 0%;"></div>
+              <div class="audio-bar-threshold" id="audio-threshold-marker" style="left: 50%;"></div>
+              <span class="audio-bar-label" id="audio-level-label">0%</span>
+            </div>
+
+            <!-- Threshold Slider -->
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Schwellenwert</span>
+                <span class="slider-value" id="threshold-value">50%</span>
+              </div>
+              <input type="range" class="slider-input" id="threshold-slider" min="1" max="100" value="50">
+            </div>
+
+            <!-- Cooldown Slider -->
+            <div class="slider-container">
+              <div class="slider-header">
+                <span class="slider-label">Cooldown</span>
+                <span class="slider-value" id="cooldown-value">500ms</span>
+              </div>
+              <input type="range" class="slider-input" id="cooldown-slider" min="100" max="1000" step="50" value="500">
+            </div>
+          </div>
+        </div>
+
+        <!-- Start Button -->
+        <button class="btn btn-primary btn-lg btn-full" id="start-btn">
+          Training Starten
+        </button>
+      </div>
+    </div>
+
+    <!-- Playing State (fullscreen overlay) -->
+    <div id="playing-view" class="fullscreen-overlay hidden">
+      <button type="button" class="overlay-close-btn" id="exit-btn" aria-label="Schließen">
+        <div class="close-icon">
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+
+      <!-- Progress Display -->
+      <div class="absolute z-50" style="top: 5rem; left: 1.5rem; color: rgba(255,255,255,0.8); font-family: monospace; font-size: 1.25rem; mix-blend-mode: difference;">
+        <span id="progress-display">0 / 20</span>
+      </div>
+
+      <!-- Sound Counter Overlay -->
+      <div id="sound-counter-overlay" class="absolute inset-0 flex items-center justify-center z-40 pointer-events-none hidden">
+        <span style="font-size: 20vw; font-weight: 900; color: rgba(255,255,255,0.3); mix-blend-mode: overlay; font-variant-numeric: tabular-nums;">
+          <span id="trigger-count">0</span>
+        </span>
+      </div>
+
+      <!-- Waiting for Sound Prompt -->
+      <div id="waiting-prompt" class="absolute z-50 hidden" style="bottom: 5rem; left: 0; right: 0; text-align: center;">
+        <div class="inline-block animate-pulse" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); padding: 0.75rem 1.5rem; border-radius: 9999px; color: white; font-weight: 700;">
+          Mache ein Geräusch!
+        </div>
+      </div>
+    </div>
+
+    <!-- Finished State -->
+    <div id="finished-view" class="hidden text-center py-8">
+      <div class="text-6xl mb-4">✅</div>
+      <h2 class="text-2xl font-bold mb-4">Training beendet!</h2>
+      <div class="flex justify-center gap-4">
+        <button class="btn btn-secondary" id="back-to-config-btn">Einstellungen</button>
+        <button class="btn btn-primary" id="restart-btn">Neustart</button>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { GameState, COLORS_DATA, getFromStorage, saveToStorage, MicrophoneHandler, playBeep } from '../scripts/utils.js';
+
+  // ===================
+  // State Management
+  // ===================
+  
+  const defaultSettings = {
+    intervalMs: 2000,
+    limitSteps: 20,
+    playSound: true,
+    soundControlMode: false,
+    totalDurationSec: 60,
+    useSoundCounter: false,
+    soundThreshold: 50,
+    soundCooldown: 500,
+    isInfinite: false
+  };
+
+  let settings = getFromStorage('colors-settings', defaultSettings);
+  let gameState = GameState.CONFIG;
+  let currentColor = COLORS_DATA[0];
+  let step = 0;
+  let timeLeft = 0;
+  let triggerCount = 0;
+  let waitingForSound = false;
+  let gameInterval = null;
+  let timerInterval = null;
+  let mic = null;
+
+  // ===================
+  // DOM Elements
+  // ===================
+  
+  const configView = document.getElementById('config-view');
+  const playingView = document.getElementById('playing-view');
+  const finishedView = document.getElementById('finished-view');
+
+  // Toggles
+  const soundModeToggle = document.getElementById('sound-mode-toggle');
+  const soundModeSwitch = document.getElementById('sound-mode-switch');
+  const infiniteToggle = document.getElementById('infinite-toggle');
+  const infiniteSwitch = document.getElementById('infinite-switch');
+  const audioToggle = document.getElementById('audio-toggle');
+  const audioSwitch = document.getElementById('audio-switch');
+  const counterToggle = document.getElementById('counter-toggle');
+  const counterSwitch = document.getElementById('counter-switch');
+
+  // Settings containers
+  const intervalSettings = document.getElementById('interval-settings');
+  const durationSettings = document.getElementById('duration-settings');
+  const stepsSettings = document.getElementById('steps-settings');
+  const micSettingsCard = document.getElementById('mic-settings-card');
+
+  // Sliders and values
+  const intervalSlider = document.getElementById('interval-slider');
+  const intervalValue = document.getElementById('interval-value');
+  const stepsSlider = document.getElementById('steps-slider');
+  const stepsValue = document.getElementById('steps-value');
+  const durationSlider = document.getElementById('duration-slider');
+  const durationValue = document.getElementById('duration-value');
+  const thresholdSlider = document.getElementById('threshold-slider');
+  const thresholdValue = document.getElementById('threshold-value');
+  const cooldownSlider = document.getElementById('cooldown-slider');
+  const cooldownValue = document.getElementById('cooldown-value');
+
+  // Audio visualizer
+  const audioLevelFill = document.getElementById('audio-level-fill');
+  const audioLevelLabel = document.getElementById('audio-level-label');
+  const audioThresholdMarker = document.getElementById('audio-threshold-marker');
+
+  // Playing view elements
+  const progressDisplay = document.getElementById('progress-display');
+  const soundCounterOverlay = document.getElementById('sound-counter-overlay');
+  const triggerCountDisplay = document.getElementById('trigger-count');
+  const waitingPrompt = document.getElementById('waiting-prompt');
+
+  // Buttons
+  const startBtn = document.getElementById('start-btn');
+  const exitBtn = document.getElementById('exit-btn');
+  const backToConfigBtn = document.getElementById('back-to-config-btn');
+  const restartBtn = document.getElementById('restart-btn');
+
+  // ===================
+  // UI Update Functions
+  // ===================
+
+  function updateUI() {
+    // Sound mode toggle
+    soundModeSwitch.className = `toggle-switch ${settings.soundControlMode ? 'on' : 'off'}`;
+    
+    // Interval/Duration visibility
+    intervalSettings.classList.toggle('hidden', settings.soundControlMode);
+    durationSettings.classList.toggle('hidden', !settings.soundControlMode);
+    
+    // Infinite toggle
+    infiniteSwitch.className = `toggle-switch ${settings.isInfinite ? 'on' : 'off'}`;
+    stepsSettings.style.opacity = settings.isInfinite ? '0.3' : '1';
+    stepsSettings.style.pointerEvents = settings.isInfinite ? 'none' : 'auto';
+    
+    // Audio toggle
+    audioSwitch.className = `toggle-switch ${settings.playSound ? 'on' : 'off'}`;
+    
+    // Counter toggle
+    counterSwitch.className = `toggle-switch ${settings.useSoundCounter ? 'on' : 'off'}`;
+    
+    // Mic settings visibility
+    const showMic = settings.soundControlMode || settings.useSoundCounter;
+    micSettingsCard.classList.toggle('hidden', !showMic);
+    
+    // Slider values
+    intervalValue.textContent = `${(settings.intervalMs / 1000).toFixed(1)}s`;
+    stepsValue.textContent = settings.limitSteps;
+    durationValue.textContent = `${settings.totalDurationSec}s`;
+    thresholdValue.textContent = `${settings.soundThreshold}%`;
+    cooldownValue.textContent = `${settings.soundCooldown}ms`;
+    
+    // Slider positions
+    intervalSlider.value = settings.intervalMs;
+    stepsSlider.value = settings.limitSteps;
+    durationSlider.value = settings.totalDurationSec;
+    thresholdSlider.value = settings.soundThreshold;
+    cooldownSlider.value = settings.soundCooldown;
+    
+    // Threshold marker
+    audioThresholdMarker.style.left = `${settings.soundThreshold}%`;
+
+    // Save settings
+    saveToStorage('colors-settings', settings);
+  }
+
+  function showView(view) {
+    configView.classList.add('hidden');
+    playingView.classList.add('hidden');
+    finishedView.classList.add('hidden');
+    
+    if (view === 'config') {
+      configView.classList.remove('hidden');
+    } else if (view === 'playing') {
+      playingView.classList.remove('hidden');
+    } else if (view === 'finished') {
+      finishedView.classList.remove('hidden');
+    }
+  }
+
+  function updatePlayingUI() {
+    // Progress display
+    if (settings.soundControlMode) {
+      progressDisplay.textContent = `${timeLeft}s`;
+    } else {
+      progressDisplay.textContent = `${step} / ${settings.limitSteps}`;
+    }
+    
+    // Trigger count
+    triggerCountDisplay.textContent = triggerCount;
+    soundCounterOverlay.classList.toggle('hidden', !settings.useSoundCounter);
+    
+    // Waiting prompt
+    waitingPrompt.classList.toggle('hidden', !(settings.soundControlMode && waitingForSound));
+    
+    // Background color
+    playingView.style.backgroundColor = currentColor.hex;
+    playingView.style.transition = 'background-color 200ms';
+  }
+
+  // ===================
+  // Game Logic
+  // ===================
+
+  function nextColor() {
+    let newColor;
+    do {
+      newColor = COLORS_DATA[Math.floor(Math.random() * COLORS_DATA.length)];
+    } while (newColor.name === currentColor.name);
+    
+    currentColor = newColor;
+    step++;
+    
+    if (settings.playSound) {
+      playBeep(600, 0.1, 0.3);
+    }
+    
+    updatePlayingUI();
+  }
+
+  function startGame() {
+    gameState = GameState.PLAYING;
+    step = 0;
+    triggerCount = 0;
+    timeLeft = settings.totalDurationSec;
+    currentColor = COLORS_DATA[Math.floor(Math.random() * COLORS_DATA.length)];
+    waitingForSound = settings.soundControlMode;
+    
+    showView('playing');
+    updatePlayingUI();
+    
+    // Setup microphone if needed
+    if (settings.soundControlMode || settings.useSoundCounter) {
+      setupMicrophone();
+    }
+    
+    // Start game loop
+    if (settings.soundControlMode) {
+      // Timer-based countdown for sound control mode
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updatePlayingUI();
+        
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    } else {
+      // Interval-based color changes
+      nextColor(); // Initial color
+      
+      if (!settings.isInfinite) {
+        gameInterval = setInterval(() => {
+          if (step >= settings.limitSteps) {
+            endGame();
+          } else {
+            nextColor();
+          }
+        }, settings.intervalMs);
+      } else {
+        gameInterval = setInterval(nextColor, settings.intervalMs);
+      }
+    }
+  }
+
+  function endGame() {
+    gameState = GameState.FINISHED;
+    
+    if (gameInterval) clearInterval(gameInterval);
+    if (timerInterval) clearInterval(timerInterval);
+    
+    if (mic) {
+      mic.stop();
+      mic = null;
+    }
+    
+    showView('finished');
+  }
+
+  function setupMicrophone() {
+    mic = new MicrophoneHandler({
+      threshold: settings.soundThreshold,
+      cooldown: settings.soundCooldown,
+      onTrigger: handleMicTrigger,
+      onLevelChange: (level) => {
+        audioLevelFill.style.width = `${level}%`;
+        audioLevelLabel.textContent = `${level}%`;
+      }
+    });
+    
+    mic.start();
+  }
+
+  function handleMicTrigger() {
+    if (settings.useSoundCounter) {
+      triggerCount++;
+    }
+    
+    if (settings.soundControlMode && waitingForSound) {
+      waitingForSound = false;
+      nextColor();
+      waitingForSound = true;
+    }
+    
+    updatePlayingUI();
+  }
+
+  // ===================
+  // Event Listeners
+  // ===================
+
+  // Toggle handlers
+  soundModeToggle?.addEventListener('click', () => {
+    settings.soundControlMode = !settings.soundControlMode;
+    updateUI();
+  });
+
+  infiniteToggle?.addEventListener('click', () => {
+    settings.isInfinite = !settings.isInfinite;
+    updateUI();
+  });
+
+  audioToggle?.addEventListener('click', () => {
+    settings.playSound = !settings.playSound;
+    updateUI();
+  });
+
+  counterToggle?.addEventListener('click', () => {
+    settings.useSoundCounter = !settings.useSoundCounter;
+    updateUI();
+    
+    // Start/stop mic preview
+    if (settings.useSoundCounter || settings.soundControlMode) {
+      if (!mic) {
+        mic = new MicrophoneHandler({
+          threshold: settings.soundThreshold,
+          cooldown: settings.soundCooldown,
+          onLevelChange: (level) => {
+            audioLevelFill.style.width = `${level}%`;
+            audioLevelLabel.textContent = `${level}%`;
+          }
+        });
+        mic.start();
+      }
+    } else {
+      if (mic) {
+        mic.stop();
+        mic = null;
+      }
+    }
+  });
+
+  // Slider handlers
+  intervalSlider?.addEventListener('input', (e) => {
+    settings.intervalMs = parseInt(e.target.value);
+    updateUI();
+  });
+
+  stepsSlider?.addEventListener('input', (e) => {
+    settings.limitSteps = parseInt(e.target.value);
+    updateUI();
+  });
+
+  durationSlider?.addEventListener('input', (e) => {
+    settings.totalDurationSec = parseInt(e.target.value);
+    updateUI();
+  });
+
+  thresholdSlider?.addEventListener('input', (e) => {
+    settings.soundThreshold = parseInt(e.target.value);
+    if (mic) mic.setThreshold(settings.soundThreshold);
+    updateUI();
+  });
+
+  cooldownSlider?.addEventListener('input', (e) => {
+    settings.soundCooldown = parseInt(e.target.value);
+    if (mic) mic.setCooldown(settings.soundCooldown);
+    updateUI();
+  });
+
+  // Button handlers
+  startBtn?.addEventListener('click', startGame);
+  
+  exitBtn?.addEventListener('click', () => {
+    endGame();
+    gameState = GameState.CONFIG;
+    showView('config');
+  });
+
+  backToConfigBtn?.addEventListener('click', () => {
+    gameState = GameState.CONFIG;
+    showView('config');
+  });
+
+  restartBtn?.addEventListener('click', startGame);
+
+  // Initialize
+  updateUI();
+</script>
+
+<style>
+  .fullscreen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 200ms;
+  }
+</style>

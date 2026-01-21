@@ -1,0 +1,588 @@
+---
+// Kettenrechner (Chain Calculator) - Mental Math Training Tool
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Kettenrechner - Training Tools">
+  <div id="chain-calc-app" class="animate-enter">
+    <!-- Config State (default view) -->
+    <div id="config-view">
+      <!-- Tool Header -->
+      <div class="tool-header">
+        <div class="tool-icon green">
+          <svg class="icon icon-xl" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="2" width="16" height="20" rx="2"/>
+            <line x1="8" y1="6" x2="16" y2="6"/>
+            <line x1="8" y1="10" x2="8" y2="10.01"/>
+            <line x1="12" y1="10" x2="12" y2="10.01"/>
+            <line x1="16" y1="10" x2="16" y2="10.01"/>
+            <line x1="8" y1="14" x2="8" y2="14.01"/>
+            <line x1="12" y1="14" x2="12" y2="14.01"/>
+            <line x1="16" y1="14" x2="16" y2="14.01"/>
+            <line x1="8" y1="18" x2="8" y2="18.01"/>
+            <line x1="12" y1="18" x2="12" y2="18.01"/>
+            <line x1="16" y1="18" x2="16" y2="18.01"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold gradient-text gradient-green-emerald">Kettenrechner</h1>
+          <p class="text-secondary">Kopfrechnen mit fortlaufenden Operationen.</p>
+        </div>
+      </div>
+
+      <div class="space-y-6">
+        <!-- Game Settings Card -->
+        <div class="card">
+          <h2 class="text-xl font-bold mb-6">Spiel</h2>
+          
+          <div class="flex gap-8 justify-center flex-wrap">
+            <!-- Speed Stepper -->
+            <div class="stepper">
+              <span class="stepper-label">Geschwindigkeit</span>
+              <div class="stepper-controls">
+                <button class="stepper-btn" id="speed-dec" aria-label="Geschwindigkeit verringern">-</button>
+                <div class="stepper-value" id="speed-value">3s</div>
+                <button class="stepper-btn" id="speed-inc" aria-label="Geschwindigkeit erhöhen">+</button>
+              </div>
+              <span class="text-xs text-tertiary">1–10 s</span>
+            </div>
+
+            <!-- Steps Stepper -->
+            <div class="stepper">
+              <span class="stepper-label">Aufgaben</span>
+              <div class="stepper-controls" id="steps-container">
+                <button class="stepper-btn" id="steps-dec" aria-label="Aufgaben verringern">-</button>
+                <div class="stepper-value" id="steps-value">5</div>
+                <button class="stepper-btn" id="steps-inc" aria-label="Aufgaben erhöhen">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-row gap-8 justify-center mt-6">
+            <!-- Infinite Toggle -->
+            <button type="button" class="toggle" id="infinite-toggle" style="width: auto; padding: 0.75rem 1rem;">
+              <div class="toggle-content">
+                <div class="toggle-label">Unendlich</div>
+              </div>
+              <div class="toggle-switch off" id="infinite-switch" style="margin-left: 1rem;">
+                <div class="toggle-knob"></div>
+              </div>
+            </button>
+
+            <!-- Sound Toggle -->
+            <button type="button" class="toggle" id="sound-toggle" style="width: auto; padding: 0.75rem 1rem;">
+              <div class="toggle-content">
+                <div class="toggle-label">Sound bei neuer Zahl</div>
+              </div>
+              <div class="toggle-switch on" id="sound-switch" style="margin-left: 1rem;">
+                <div class="toggle-knob"></div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- View Settings Card -->
+        <div class="card">
+          <h2 class="text-xl font-bold mb-4">Ansicht</h2>
+          <div class="slider-container">
+            <div class="slider-header">
+              <span class="slider-label">Schriftgröße</span>
+              <span class="slider-value" id="fontsize-value">10 rem</span>
+            </div>
+            <input type="range" class="slider-input" id="fontsize-slider" min="2" max="50" value="10">
+          </div>
+        </div>
+
+        <!-- Start Button -->
+        <button class="btn btn-primary btn-lg btn-full" id="start-btn">
+          Start
+        </button>
+      </div>
+    </div>
+
+    <!-- Playing State -->
+    <div id="playing-view" class="hidden">
+      <div class="flex flex-col items-center justify-center animate-enter" style="min-height: 50vh;">
+        <!-- Step Display -->
+        <div class="text-lg text-secondary font-mono flex items-center gap-2 mb-4" id="step-display">
+          Schritt 1 / 5
+        </div>
+
+        <!-- Main Display (number or operation) -->
+        <div class="font-bold tabular-nums transition-all" id="main-display" style="font-size: 10rem; color: var(--color-primary);">
+          0
+        </div>
+
+        <!-- Countdown Display -->
+        <div class="font-bold tabular-nums text-secondary opacity-60" id="countdown-display" style="font-size: 5rem; min-height: 5rem;">
+          &nbsp;
+        </div>
+
+        <!-- Control Buttons -->
+        <div class="flex gap-8 opacity-50 hover:opacity-100 transition-opacity mt-4">
+          <button class="font-bold uppercase tracking-wider hover:opacity-80" id="done-btn" style="color: var(--color-green-500);">Fertig</button>
+          <button class="font-bold uppercase tracking-wider hover:opacity-80" id="abort-btn" style="color: var(--color-red-500);">Abbruch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pending State (answer input) -->
+    <div id="pending-view" class="hidden">
+      <div class="max-w-md mx-auto py-8 animate-enter flex flex-col justify-center" style="min-height: 50vh;">
+        <!-- Question mark -->
+        <div class="text-6xl font-bold text-center mb-8 animate-pulse" style="color: var(--color-primary);">?</div>
+        
+        <!-- Answer Display -->
+        <div class="card mb-4" style="padding: 0.5rem;">
+          <div class="text-3xl font-mono text-center py-4" id="answer-display" style="height: 5rem;">&nbsp;</div>
+        </div>
+
+        <!-- Numpad -->
+        <div class="numpad">
+          <button class="numpad-btn" data-num="1">1</button>
+          <button class="numpad-btn" data-num="2">2</button>
+          <button class="numpad-btn" data-num="3">3</button>
+          <button class="numpad-btn" data-num="4">4</button>
+          <button class="numpad-btn" data-num="5">5</button>
+          <button class="numpad-btn" data-num="6">6</button>
+          <button class="numpad-btn" data-num="7">7</button>
+          <button class="numpad-btn" data-num="8">8</button>
+          <button class="numpad-btn" data-num="9">9</button>
+          <button class="numpad-btn clear" id="clear-btn">C</button>
+          <button class="numpad-btn" data-num="0">0</button>
+          <button class="numpad-btn submit" id="submit-btn">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Finished State -->
+    <div id="finished-view" class="hidden">
+      <div class="text-center animate-enter flex flex-col justify-center" style="min-height: 50vh;">
+        <!-- Result Emoji -->
+        <div class="text-5xl mb-4" id="result-emoji">🎉</div>
+        
+        <!-- Result Text -->
+        <h2 class="text-2xl font-bold mb-4" id="result-text">Korrekt!</h2>
+        
+        <!-- Final Answer -->
+        <div class="text-5xl font-bold mb-4" id="final-answer" style="color: var(--color-green-500);">0</div>
+        
+        <!-- History -->
+        <div class="card p-4 mb-6 font-mono text-lg text-secondary overflow-x-auto whitespace-nowrap" id="history-display">
+          0 = 0
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-center gap-4">
+          <button class="btn btn-secondary" id="back-to-config-btn">Einstellungen</button>
+          <button class="btn btn-primary" id="restart-btn">
+            <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="margin-right: 0.5rem;">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Neustart
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  import { GameState, getFromStorage, saveToStorage, playBeep, playSuccess, playFailure } from '../scripts/utils.js';
+
+  // ===================
+  // State Management
+  // ===================
+  
+  const defaultSettings = {
+    speed: 3,
+    steps: 5,
+    fontSize: 10,
+    playBeep: true,
+    isInfinite: false
+  };
+
+  let settings = getFromStorage('chain-calc-settings', defaultSettings);
+  let gameState = GameState.CONFIG;
+  let currentStep = 0;
+  let runningTotal = 0;
+  let userAnswer = '';
+  let history = '0';
+  let isCorrect = false;
+  let displayPhase = 'countdown'; // 'countdown' | 'operation' | 'total'
+  let countdownValue = 0;
+  let currentOperation = null;
+  let gameTimer = null;
+
+  // Beep sound
+  const BEEP_SOUND = new Audio('/beep-short.mp3');
+  BEEP_SOUND.volume = 0.5;
+
+  // ===================
+  // DOM Elements
+  // ===================
+  
+  const configView = document.getElementById('config-view');
+  const playingView = document.getElementById('playing-view');
+  const pendingView = document.getElementById('pending-view');
+  const finishedView = document.getElementById('finished-view');
+
+  // Config elements
+  const speedDec = document.getElementById('speed-dec');
+  const speedInc = document.getElementById('speed-inc');
+  const speedValue = document.getElementById('speed-value');
+  const stepsDec = document.getElementById('steps-dec');
+  const stepsInc = document.getElementById('steps-inc');
+  const stepsValue = document.getElementById('steps-value');
+  const stepsContainer = document.getElementById('steps-container');
+  const infiniteToggle = document.getElementById('infinite-toggle');
+  const infiniteSwitch = document.getElementById('infinite-switch');
+  const soundToggle = document.getElementById('sound-toggle');
+  const soundSwitch = document.getElementById('sound-switch');
+  const fontsizeSlider = document.getElementById('fontsize-slider');
+  const fontsizeValue = document.getElementById('fontsize-value');
+  const startBtn = document.getElementById('start-btn');
+
+  // Playing elements
+  const stepDisplay = document.getElementById('step-display');
+  const mainDisplay = document.getElementById('main-display');
+  const countdownDisplay = document.getElementById('countdown-display');
+  const doneBtn = document.getElementById('done-btn');
+  const abortBtn = document.getElementById('abort-btn');
+
+  // Pending elements
+  const answerDisplay = document.getElementById('answer-display');
+  const clearBtn = document.getElementById('clear-btn');
+  const submitBtn = document.getElementById('submit-btn');
+  const numpadBtns = document.querySelectorAll('.numpad-btn[data-num]');
+
+  // Finished elements
+  const resultEmoji = document.getElementById('result-emoji');
+  const resultText = document.getElementById('result-text');
+  const finalAnswer = document.getElementById('final-answer');
+  const historyDisplay = document.getElementById('history-display');
+  const backToConfigBtn = document.getElementById('back-to-config-btn');
+  const restartBtn = document.getElementById('restart-btn');
+
+  // ===================
+  // UI Update Functions
+  // ===================
+
+  function updateUI() {
+    // Speed
+    speedValue.textContent = `${settings.speed}s`;
+    
+    // Steps
+    stepsValue.textContent = settings.steps;
+    stepsContainer.style.opacity = settings.isInfinite ? '0.3' : '1';
+    stepsContainer.style.pointerEvents = settings.isInfinite ? 'none' : 'auto';
+    
+    // Infinite
+    infiniteSwitch.className = `toggle-switch ${settings.isInfinite ? 'on' : 'off'}`;
+    
+    // Sound
+    soundSwitch.className = `toggle-switch ${settings.playBeep ? 'on' : 'off'}`;
+    
+    // Font size
+    fontsizeSlider.value = settings.fontSize;
+    fontsizeValue.textContent = `${settings.fontSize} rem`;
+    mainDisplay.style.fontSize = `${settings.fontSize}rem`;
+
+    // Save settings
+    saveToStorage('chain-calc-settings', settings);
+  }
+
+  function showView(view) {
+    configView.classList.add('hidden');
+    playingView.classList.add('hidden');
+    pendingView.classList.add('hidden');
+    finishedView.classList.add('hidden');
+    
+    if (view === 'config') {
+      configView.classList.remove('hidden');
+    } else if (view === 'playing') {
+      playingView.classList.remove('hidden');
+    } else if (view === 'pending') {
+      pendingView.classList.remove('hidden');
+    } else if (view === 'finished') {
+      finishedView.classList.remove('hidden');
+    }
+  }
+
+  function updatePlayingUI() {
+    // Step display
+    if (settings.isInfinite) {
+      stepDisplay.innerHTML = `<svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style="width: 1.25rem; height: 1.25rem;">
+        <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z"/>
+      </svg> Schritt ${currentStep}`;
+    } else {
+      stepDisplay.textContent = `Schritt ${Math.min(currentStep, settings.steps)} / ${settings.steps}`;
+    }
+
+    // Countdown display
+    if (displayPhase === 'countdown' && currentStep > 0) {
+      countdownDisplay.textContent = countdownValue;
+    } else {
+      countdownDisplay.innerHTML = '&nbsp;';
+    }
+
+    // Main display color
+    if (displayPhase === 'total') {
+      mainDisplay.style.color = 'var(--color-orange-600)';
+      mainDisplay.style.transform = 'scale(1.1)';
+    } else {
+      mainDisplay.style.color = 'var(--color-primary)';
+      mainDisplay.style.transform = 'scale(1)';
+    }
+  }
+
+  function playBeepSound() {
+    if (settings.playBeep) {
+      BEEP_SOUND.currentTime = 0;
+      BEEP_SOUND.play().catch(() => {});
+    }
+  }
+
+  // ===================
+  // Game Logic
+  // ===================
+
+  function generateOperation(currentTotal) {
+    const num = Math.floor(Math.random() * 9) + 1; // 1-9
+    // Avoid negative totals
+    const isAdd = Math.random() > 0.5 || (currentTotal - num < 0);
+    return { val: num, op: isAdd ? '+' : '-' };
+  }
+
+  function startGame() {
+    gameState = GameState.PLAYING;
+    currentStep = 0;
+    runningTotal = 0;
+    history = '0';
+    userAnswer = '';
+    displayPhase = 'countdown';
+    currentOperation = null;
+    
+    showView('playing');
+    runGameLoop();
+  }
+
+  function runGameLoop() {
+    if (gameState !== GameState.PLAYING) return;
+
+    // Initial countdown: 3, 2, 1
+    if (currentStep === 0) {
+      let count = 3;
+      displayPhase = 'countdown';
+      mainDisplay.textContent = count;
+      playBeepSound();
+
+      gameTimer = setInterval(() => {
+        count--;
+        if (count > 0) {
+          mainDisplay.textContent = count;
+          playBeepSound();
+        } else {
+          clearInterval(gameTimer);
+          displayPhase = 'operation';
+          currentStep = 1;
+          runOperationPhase();
+        }
+      }, 1000);
+      return;
+    }
+  }
+
+  function runOperationPhase() {
+    const shouldContinue = settings.isInfinite || currentStep <= settings.steps;
+    
+    if (!shouldContinue) {
+      // Go to answer input
+      gameState = GameState.PENDING;
+      showView('pending');
+      answerDisplay.textContent = userAnswer || '\u00A0';
+      return;
+    }
+
+    // Show operation
+    displayPhase = 'operation';
+    const { val, op } = generateOperation(runningTotal);
+    currentOperation = { val, op };
+    
+    // Calculate new total
+    runningTotal = op === '+' ? runningTotal + val : runningTotal - val;
+    history += ` ${op} ${val}`;
+    
+    mainDisplay.textContent = `${op}${val}`;
+    playBeepSound();
+    updatePlayingUI();
+
+    // After showing operation, start countdown
+    setTimeout(() => {
+      startCountdownPhase();
+    }, settings.speed * 1000);
+  }
+
+  function startCountdownPhase() {
+    if (gameState !== GameState.PLAYING) return;
+    
+    displayPhase = 'countdown';
+    countdownValue = settings.speed;
+    updatePlayingUI();
+
+    gameTimer = setInterval(() => {
+      countdownValue--;
+      updatePlayingUI();
+
+      if (countdownValue <= 0) {
+        clearInterval(gameTimer);
+        showTotalPhase();
+      }
+    }, 1000);
+  }
+
+  function showTotalPhase() {
+    if (gameState !== GameState.PLAYING) return;
+
+    displayPhase = 'total';
+    mainDisplay.textContent = runningTotal;
+    updatePlayingUI();
+
+    // Move to next step after a brief pause
+    setTimeout(() => {
+      currentStep++;
+      runOperationPhase();
+    }, 1000);
+  }
+
+  function goToPending() {
+    if (gameTimer) clearInterval(gameTimer);
+    gameState = GameState.PENDING;
+    showView('pending');
+    userAnswer = '';
+    answerDisplay.textContent = '\u00A0';
+  }
+
+  function submitAnswer() {
+    const answer = parseInt(userAnswer);
+    isCorrect = answer === runningTotal;
+    
+    if (isCorrect) {
+      playSuccess();
+    } else {
+      playFailure();
+    }
+    
+    showFinished();
+  }
+
+  function showFinished() {
+    gameState = GameState.FINISHED;
+    
+    resultEmoji.textContent = isCorrect ? '🎉' : '❌';
+    resultText.textContent = isCorrect ? 'Korrekt!' : 'Falsch!';
+    finalAnswer.textContent = runningTotal;
+    finalAnswer.style.color = isCorrect ? 'var(--color-green-500)' : 'var(--color-blue-500)';
+    historyDisplay.textContent = `${history} = ${runningTotal}`;
+    
+    showView('finished');
+  }
+
+  function abortGame() {
+    if (gameTimer) clearInterval(gameTimer);
+    gameState = GameState.CONFIG;
+    showView('config');
+  }
+
+  // ===================
+  // Event Listeners
+  // ===================
+
+  // Speed controls
+  speedDec?.addEventListener('click', () => {
+    settings.speed = Math.max(1, settings.speed - 1);
+    updateUI();
+  });
+
+  speedInc?.addEventListener('click', () => {
+    settings.speed = Math.min(10, settings.speed + 1);
+    updateUI();
+  });
+
+  // Steps controls
+  stepsDec?.addEventListener('click', () => {
+    settings.steps = Math.max(3, settings.steps - 1);
+    updateUI();
+  });
+
+  stepsInc?.addEventListener('click', () => {
+    settings.steps = Math.min(50, settings.steps + 1);
+    updateUI();
+  });
+
+  // Toggle handlers
+  infiniteToggle?.addEventListener('click', () => {
+    settings.isInfinite = !settings.isInfinite;
+    updateUI();
+  });
+
+  soundToggle?.addEventListener('click', () => {
+    settings.playBeep = !settings.playBeep;
+    updateUI();
+  });
+
+  // Font size slider
+  fontsizeSlider?.addEventListener('input', (e) => {
+    settings.fontSize = parseInt(e.target.value);
+    updateUI();
+  });
+
+  // Start button
+  startBtn?.addEventListener('click', startGame);
+
+  // Playing view buttons
+  doneBtn?.addEventListener('click', goToPending);
+  abortBtn?.addEventListener('click', abortGame);
+
+  // Numpad buttons
+  numpadBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = btn.dataset.num;
+      if (userAnswer.length < 4) {
+        userAnswer += num;
+        answerDisplay.textContent = userAnswer;
+      }
+    });
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    userAnswer = '';
+    answerDisplay.textContent = '\u00A0';
+  });
+
+  submitBtn?.addEventListener('click', submitAnswer);
+
+  // Finished view buttons
+  backToConfigBtn?.addEventListener('click', () => {
+    gameState = GameState.CONFIG;
+    showView('config');
+  });
+
+  restartBtn?.addEventListener('click', startGame);
+
+  // Initialize
+  updateUI();
+</script>
+
+<style>
+  @media (min-width: 640px) {
+    .stepper-value {
+      font-size: 2.5rem;
+    }
+  }
+</style>

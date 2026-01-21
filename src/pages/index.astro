@@ -1,0 +1,107 @@
+---
+// Home page - Training Tools Collection
+import Layout from '../layouts/Layout.astro';
+
+const tools = [
+  {
+    id: 'farben',
+    name: 'Farben',
+    description: 'Stroop-Effekt-Trainer. Farben und Wörter blinken zur Reaktionsschulung',
+    path: '/farben',
+    icon: 'droplet',
+    tags: ['KOGNITIV', 'REAKTION'],
+    accentColor: 'border-l-purple'
+  },
+  {
+    id: 'kettenrechner',
+    name: 'Kettenrechner',
+    description: 'Kopfrechnen-Kettenaufgaben. Löse fortlaufende Rechenoperationen',
+    path: '/kettenrechner',
+    icon: 'calculator',
+    tags: ['MATHE', 'FOKUS'],
+    accentColor: 'border-l-green'
+  },
+];
+---
+
+<Layout title="Training Tools">
+  <div class="space-y-12 animate-enter">
+    <!-- Header -->
+    <header class="text-center py-8">
+      <h1 class="text-5xl md-text-7xl font-black tracking-tight mb-2 gradient-text gradient-blue-purple">
+        Training
+      </h1>
+      <p class="text-secondary font-bold uppercase tracking-widest text-sm">
+        Training Tools Collection
+      </p>
+    </header>
+
+    <!-- Tools Grid -->
+    <div class="grid grid-cols-1 gap-6 max-w-2xl mx-auto">
+      {tools.map((tool) => (
+        <a href={tool.path} class={`card card-clickable border-l-4 ${tool.accentColor}`}>
+          <div class="flex items-start gap-4">
+            <!-- Icon -->
+            <div class="p-3 rounded-lg bg-surface-hover text-primary tool-card-icon">
+              {tool.icon === 'droplet' && (
+                <svg class="icon icon-lg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+              )}
+              {tool.icon === 'calculator' && (
+                <svg class="icon icon-lg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="4" y="2" width="16" height="20" rx="2"/>
+                  <line x1="8" y1="6" x2="16" y2="6"/>
+                  <line x1="8" y1="10" x2="8" y2="10.01"/>
+                  <line x1="12" y1="10" x2="12" y2="10.01"/>
+                  <line x1="16" y1="10" x2="16" y2="10.01"/>
+                  <line x1="8" y1="14" x2="8" y2="14.01"/>
+                  <line x1="12" y1="14" x2="12" y2="14.01"/>
+                  <line x1="16" y1="14" x2="16" y2="14.01"/>
+                  <line x1="8" y1="18" x2="8" y2="18.01"/>
+                  <line x1="12" y1="18" x2="12" y2="18.01"/>
+                  <line x1="16" y1="18" x2="16" y2="18.01"/>
+                </svg>
+              )}
+            </div>
+            
+            <!-- Content -->
+            <div>
+              <h2 class="text-xl font-bold mb-1 tool-card-title">{tool.name}</h2>
+              <p class="text-sm text-secondary mb-4">{tool.description}</p>
+              <div class="flex flex-wrap gap-2">
+                {tool.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .tool-card-icon {
+    background: var(--color-surface-hover);
+    transition: all 0.3s ease;
+  }
+  
+  .card-clickable:hover .tool-card-icon {
+    background: var(--color-primary);
+    color: white;
+  }
+  
+  .tool-card-title {
+    transition: color 0.3s ease;
+  }
+  
+  .card-clickable:hover .tool-card-title {
+    color: var(--color-primary);
+  }
+
+  .bg-surface-hover {
+    background: var(--color-surface-hover);
+  }
+</style>

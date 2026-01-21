@@ -1,0 +1,122 @@
+---
+// Layout.astro - Main layout wrapper for all pages
+interface Props {
+  title?: string;
+  showNav?: boolean;
+}
+
+const { title = 'Training Tools', showNav = true } = Astro.props;
+const isHome = Astro.url.pathname === '/';
+---
+
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <meta name="description" content="Trainingstools für mentale Fitness" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- Ambient Background -->
+      <div class="ambient-bg-1"></div>
+      <div class="ambient-bg-2"></div>
+
+      <!-- Navbar (not shown on home) -->
+      {showNav && !isHome && (
+        <nav class="navbar">
+          <div class="navbar-content">
+            <a href="/" class="back-link">
+              <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="m12 19-7-7 7-7M19 12H5"/>
+              </svg>
+              <span>Zurück zum Menü</span>
+            </a>
+          </div>
+        </nav>
+      )}
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <slot />
+      </main>
+
+      <!-- Floating Controls -->
+      <div class="floating-controls" id="floating-controls">
+        <button type="button" class="floating-btn" id="fullscreen-btn" aria-label="Vollbild">
+          <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" id="fullscreen-icon">
+            <polyline points="15 3 21 3 21 9"/>
+            <polyline points="9 21 3 21 3 15"/>
+            <line x1="21" y1="3" x2="14" y2="10"/>
+            <line x1="3" y1="21" x2="10" y2="14"/>
+          </svg>
+        </button>
+        <button type="button" class="floating-btn" id="scroll-top-btn" aria-label="Nach oben scrollen">
+          <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="m5 12 7-7 7 7M12 19V5"/>
+          </svg>
+        </button>
+        <button type="button" class="floating-btn" id="scroll-bottom-btn" aria-label="Nach unten scrollen">
+          <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="m19 12-7 7-7-7M12 5v14"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <style is:global>
+      @import '../styles/global.css';
+    </style>
+
+    <script>
+      // Floating controls functionality
+      const fullscreenBtn = document.getElementById('fullscreen-btn');
+      const scrollTopBtn = document.getElementById('scroll-top-btn');
+      const scrollBottomBtn = document.getElementById('scroll-bottom-btn');
+      const fullscreenIcon = document.getElementById('fullscreen-icon');
+
+      // Fullscreen toggle
+      fullscreenBtn?.addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+      // Update fullscreen icon
+      document.addEventListener('fullscreenchange', () => {
+        if (fullscreenIcon) {
+          if (document.fullscreenElement) {
+            fullscreenIcon.innerHTML = `
+              <polyline points="4 14 10 14 10 20"/>
+              <polyline points="20 10 14 10 14 4"/>
+              <line x1="14" y1="10" x2="21" y2="3"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            `;
+          } else {
+            fullscreenIcon.innerHTML = `
+              <polyline points="15 3 21 3 21 9"/>
+              <polyline points="9 21 3 21 3 15"/>
+              <line x1="21" y1="3" x2="14" y2="10"/>
+              <line x1="3" y1="21" x2="10" y2="14"/>
+            `;
+          }
+        }
+      });
+
+      // Scroll buttons
+      scrollTopBtn?.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      scrollBottomBtn?.addEventListener('click', () => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
+    </script>
+  </body>
+</html>
